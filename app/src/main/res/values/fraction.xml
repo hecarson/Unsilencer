@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <fraction name="checkboxColumnBias">0.0</fraction>
+    <fraction name="timeColumnBias">0.3</fraction>
+    <fraction name="ringerModeColumnBias">0.9</fraction>
+</resources>
