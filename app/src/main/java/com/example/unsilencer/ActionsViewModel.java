@@ -82,6 +82,15 @@ public class ActionsViewModel extends ViewModel {
         saveActionsToFile();
     }
 
+    /**
+     * This is useful to cancel all action alarms to cancel and set them again, which ensures that
+     * all actions are actually scheduled.
+     */
+    public void removeAndReaddAllActions() {
+        removedActionsLiveData.setValue(actions);
+        addedActionsLiveData.setValue(actions);
+    }
+
     public LiveData<List<Action>> getActionsLiveData() {
         return actionsLiveData;
     }

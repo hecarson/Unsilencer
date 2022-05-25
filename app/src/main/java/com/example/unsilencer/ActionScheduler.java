@@ -29,12 +29,6 @@ public class ActionScheduler {
                             PendingIntent.FLAG_IMMUTABLE);
 
             alarmManager.cancel(ringerModeSettingPendingIntent);
-
-            Log.d("Unsilencer", "removed alarm for " +
-                    action.hour() + "h " +
-                    action.minute() + "m, request code " +
-                    action.requestCode() + ", ringer mode " +
-                    action.ringerMode());
         }
     }
 
@@ -58,15 +52,6 @@ public class ActionScheduler {
                     PendingIntent.getBroadcast(context, action.requestCode(), ringerModeSettingIntent,
                             PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT)
             );
-
-            GregorianCalendar actionCalendar = new GregorianCalendar();
-            actionCalendar.setTimeInMillis(findNextEpochTimeForAction(action.hour(), action.minute()));
-            Log.d("Unsilencer", "set alarm for " +
-                    actionCalendar.get(Calendar.DAY_OF_MONTH) + "d " +
-                    actionCalendar.get(Calendar.HOUR_OF_DAY) + "h " +
-                    actionCalendar.get(Calendar.MINUTE) + "m, request code " +
-                    action.requestCode() + ", ringer mode " +
-                    action.ringerMode());
         }
     }
 
@@ -80,7 +65,6 @@ public class ActionScheduler {
 
         if (!nowCalendar.before(actionCalendar))
             actionCalendar.add(Calendar.DAY_OF_MONTH, 1);
-//            actionCalendar.add(Calendar.SECOND, 10);
 
         return actionCalendar.getTimeInMillis();
     }

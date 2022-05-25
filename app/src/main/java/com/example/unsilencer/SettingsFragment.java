@@ -11,6 +11,7 @@ import android.provider.Settings;
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreference;
@@ -19,6 +20,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
     private NotificationManager notifManager;
     private AlarmManager alarmManager;
+    private ActionsViewModel actionsViewModel;
     private SwitchPreference notifPolicyPref;
     private SwitchPreference exactAlarmPref;
     private ActivityResultLauncher<Intent> notifPolicySettingsLauncher;
@@ -30,6 +32,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
         notifManager = requireContext().getSystemService(NotificationManager.class);
         alarmManager = requireContext().getSystemService(AlarmManager.class);
+        actionsViewModel = new ViewModelProvider(requireActivity()).get(ActionsViewModel.class);
 
         notifPolicyPref = findPreference("notifPolicyPerm");
         exactAlarmPref = findPreference("exactAlarmPerm");
@@ -46,7 +49,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         notifPolicyPref.setOnPreferenceClickListener(this::onNotifPolicyPrefClicked);
         exactAlarmPref.setOnPreferenceClickListener(this::onExactAlarmPrefClicked);
 
-        // make settings launchers here since registerForActivityResult must be called during initialization
+        // make settings launchers here since registerForActivityResult can only be called during initialization
         notifPolicySettingsLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 this::onNotifPolicySettingActivityResult
@@ -93,7 +96,11 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         if (Build.VERSION.SDK_INT < 31)
             return;
 
-        exactAlarmPref.setChecked(alarmManager.canScheduleExactAlarms());
+        if (alarmManager.canScheduleExactAlarms()) {
+            exactAlarmPref.setChecked(true);
+            // ensure all actions are scheduled
+            actionsViewModel.removeAndReaddAllActions();
+        }
     }
 
 }

@@ -24,12 +24,6 @@ public class RingerModeSettingReceiver extends BroadcastReceiver {
         int ringerMode = extras.getInt("ringerMode");
         int requestCode = extras.getInt("requestCode");
 
-        Log.d("Unsilencer", "received alarm for " +
-                hour + "h " +
-                minute + "m, request code " +
-                requestCode + ", ringer mode " +
-                ringerMode);
-
         NotificationManager notifManager = context.getSystemService(NotificationManager.class);
         AudioManager audioManager = context.getSystemService(AudioManager.class);
 
@@ -56,15 +50,6 @@ public class RingerModeSettingReceiver extends BroadcastReceiver {
                 PendingIntent.getBroadcast(context, requestCode, ringerModeSettingIntent,
                         PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT)
         );
-
-        GregorianCalendar actionCalendar = new GregorianCalendar();
-        actionCalendar.setTimeInMillis(ActionScheduler.findNextEpochTimeForAction(hour, minute));
-        Log.d("Unsilencer", "set alarm for " +
-                actionCalendar.get(Calendar.DAY_OF_MONTH) + "d " +
-                actionCalendar.get(Calendar.HOUR_OF_DAY) + "h " +
-                actionCalendar.get(Calendar.MINUTE) + "m, request code " +
-                requestCode + ", ringer mode " +
-                ringerMode);
     }
 
 }
