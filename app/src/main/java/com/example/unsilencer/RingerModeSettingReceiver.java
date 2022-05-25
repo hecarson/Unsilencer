@@ -1,15 +1,62 @@
 package com.example.unsilencer;
 
+import android.app.AlarmManager;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.widget.Toast;
+import android.media.AudioManager;
+import android.os.Build;
+import android.os.Bundle;
+import android.util.Log;
+
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 public class RingerModeSettingReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Toast.makeText(context, "haha penis", Toast.LENGTH_SHORT).show();
+        Bundle extras = intent.getExtras();
+        int hour = extras.getInt("hour");
+        int minute = extras.getInt("minute");
+        int ringerMode = extras.getInt("ringerMode");
+        int requestCode = extras.getInt("requestCode");
+
+        NotificationManager notifManager = context.getSystemService(NotificationManager.class);
+        AudioManager audioManager = context.getSystemService(AudioManager.class);
+
+        if (!notifManager.isNotificationPolicyAccessGranted())
+            return;
+
+        // this entire project... just for this one line
+        audioManager.setRingerMode(ringerMode);
+
+        AlarmManager alarmManager = context.getSystemService(AlarmManager.class);
+
+        if (Build.VERSION.SDK_INT >= 31 && !alarmManager.canScheduleExactAlarms())
+            return;
+
+        Intent ringerModeSettingIntent = new Intent(context, RingerModeSettingReceiver.class);
+        ringerModeSettingIntent.putExtra("hour", hour);
+        ringerModeSettingIntent.putExtra("minute", minute);
+        ringerModeSettingIntent.putExtra("ringerMode", ringerMode);
+        ringerModeSettingIntent.putExtra("requestCode", requestCode);
+
+        alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                ActionScheduler.findNextEpochTimeForAction(hour, minute),
+                PendingIntent.getBroadcast(context, requestCode, ringerModeSettingIntent, PendingIntent.FLAG_IMMUTABLE)
+        );
+
+        GregorianCalendar actionCalendar = new GregorianCalendar();
+        actionCalendar.setTimeInMillis(ActionScheduler.findNextEpochTimeForAction(hour, minute));
+        Log.d("Unsilencer", "set alarm for " +
+                actionCalendar.get(Calendar.DAY_OF_MONTH) + "d " +
+                actionCalendar.get(Calendar.HOUR_OF_DAY) + "h " +
+                actionCalendar.get(Calendar.MINUTE) + "m " +
+                actionCalendar.get(Calendar.SECOND) + "s");
     }
 
 }

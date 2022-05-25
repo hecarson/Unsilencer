@@ -1,27 +1,17 @@
 package com.example.unsilencer;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.NavUtils;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
-import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
-import android.app.AlarmManager;
-import android.app.NotificationManager;
-import android.content.res.Resources;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity implements EditorFragment.SettingsNavigator {
-
-    public static final String DEBUG_TAG = "Unsilencer";
 
     private ActionsViewModel actionsViewModel;
     private ActionScheduler actionScheduler;
@@ -38,7 +28,8 @@ public class MainActivity extends AppCompatActivity implements EditorFragment.Se
         // the ActionsViewModel needs to be initialized before inflating layouts, since inflating EditorFragment needs
         // the ActionsViewModel initialized beforehand
         actionsViewModel = new ViewModelProvider(this, new ActionsViewModelFactory()).get(ActionsViewModel.class);
-        actionsViewModel.getActionsLiveData().observe(this, actionScheduler::updateAlarmsForActions);
+        actionsViewModel.getRemovedActionRequestCodesLiveData().observe(this, actionScheduler::cancelRemovedActions);
+        actionsViewModel.getAddedActionsLiveData().observe(this, actionScheduler::addAlarmsForActions);
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);

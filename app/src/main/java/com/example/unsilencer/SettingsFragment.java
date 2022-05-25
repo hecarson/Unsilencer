@@ -60,8 +60,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         Preference debugPref = findPreference("debugPref");
         assert debugPref != null;
         debugPref.setOnPreferenceClickListener((preference) -> {
-            Intent intent = new Intent(requireContext(), RingerModeSettingReceiver.class);
-            requireContext().sendBroadcast(intent);
+
             return true;
         });
     }

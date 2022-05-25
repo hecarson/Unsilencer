@@ -119,8 +119,8 @@ public class EditorFragment extends Fragment {
             ringerModeButton.setOnClickListener(this::onRingerModeButtonClicked);
 
             // set data in row
-            timeLabel.setText(hourAndMinuteTo12HourStr(action.hour, action.minute));
-            ringerModeButton.setImageResource(getImageIdFromRingerMode(action.ringerMode));
+            timeLabel.setText(hourAndMinuteTo12HourStr(action.hour(), action.minute()));
+            ringerModeButton.setImageResource(getImageIdFromRingerMode(action.ringerMode()));
         }
     }
 
@@ -199,8 +199,8 @@ public class EditorFragment extends Fragment {
         TimePickerDialog timePickerDialog = new TimePickerDialog(
                 requireContext(),
                 (timePickerView, hour, minute) ->
-                        actionsViewModel.setAction(actionIndex, hour, minute, action.ringerMode),
-                action.hour, action.minute, false
+                        actionsViewModel.setAction(actionIndex, hour, minute, action.ringerMode()),
+                action.hour(), action.minute(), false
         );
         timePickerDialog.show();
     }
@@ -214,7 +214,7 @@ public class EditorFragment extends Fragment {
         int newRingerMode = -1;
 
         // toggle ringer mode
-        switch (action.ringerMode) {
+        switch (action.ringerMode()) {
             case AudioManager.RINGER_MODE_SILENT:
                 newRingerMode = AudioManager.RINGER_MODE_VIBRATE;
                 break;
@@ -226,7 +226,7 @@ public class EditorFragment extends Fragment {
                 break;
         }
 
-        actionsViewModel.setAction(actionIndex, action.hour, action.minute, newRingerMode);
+        actionsViewModel.setAction(actionIndex, action.hour(), action.minute(), newRingerMode);
     }
 
 }
