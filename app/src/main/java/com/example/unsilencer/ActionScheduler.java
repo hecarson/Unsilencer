@@ -25,28 +25,27 @@ public class ActionScheduler {
 
         for (Action action : removedActions) {
             PendingIntent ringerModeSettingPendingIntent =
-                    PendingIntent.getBroadcast(context, action.requestCode(), ringerModeSettingIntent, PendingIntent.FLAG_IMMUTABLE);
+                    PendingIntent.getBroadcast(context, action.requestCode(), ringerModeSettingIntent,
+                            PendingIntent.FLAG_IMMUTABLE);
 
             alarmManager.cancel(ringerModeSettingPendingIntent);
 
-            GregorianCalendar actionCalendar = new GregorianCalendar();
-            actionCalendar.setTimeInMillis(findNextEpochTimeForAction(action.hour(), action.minute()));
             Log.d("Unsilencer", "removed alarm for " +
-                    actionCalendar.get(Calendar.DAY_OF_MONTH) + "d " +
-                    actionCalendar.get(Calendar.HOUR_OF_DAY) + "h " +
-                    actionCalendar.get(Calendar.MINUTE) + "m " +
-                    actionCalendar.get(Calendar.SECOND) + "s");
+                    action.hour() + "h " +
+                    action.minute() + "m, request code " +
+                    action.requestCode() + ", ringer mode " +
+                    action.ringerMode());
         }
     }
 
-    public void addAlarmsForActions(List<Action> actions) {
+    public void addAlarmsForActions(List<Action> addedActions) {
         AlarmManager alarmManager = context.getSystemService(AlarmManager.class);
 
         if (Build.VERSION.SDK_INT >= 31 && !alarmManager.canScheduleExactAlarms())
             return;
 
         // make new alarms for each action
-        for (Action action : actions) {
+        for (Action action : addedActions) {
             Intent ringerModeSettingIntent = new Intent(context, RingerModeSettingReceiver.class);
             ringerModeSettingIntent.putExtra("hour", action.hour());
             ringerModeSettingIntent.putExtra("minute", action.minute());
@@ -56,7 +55,8 @@ public class ActionScheduler {
             alarmManager.setExactAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
                     findNextEpochTimeForAction(action.hour(), action.minute()),
-                    PendingIntent.getBroadcast(context, action.requestCode(), ringerModeSettingIntent, PendingIntent.FLAG_IMMUTABLE)
+                    PendingIntent.getBroadcast(context, action.requestCode(), ringerModeSettingIntent,
+                            PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT)
             );
 
             GregorianCalendar actionCalendar = new GregorianCalendar();
@@ -64,8 +64,9 @@ public class ActionScheduler {
             Log.d("Unsilencer", "set alarm for " +
                     actionCalendar.get(Calendar.DAY_OF_MONTH) + "d " +
                     actionCalendar.get(Calendar.HOUR_OF_DAY) + "h " +
-                    actionCalendar.get(Calendar.MINUTE) + "m " +
-                    actionCalendar.get(Calendar.SECOND) + "s");
+                    actionCalendar.get(Calendar.MINUTE) + "m, request code " +
+                    action.requestCode() + ", ringer mode " +
+                    action.ringerMode());
         }
     }
 
