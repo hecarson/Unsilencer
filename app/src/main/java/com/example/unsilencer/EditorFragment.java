@@ -33,7 +33,7 @@ public class EditorFragment extends Fragment {
         void navigateToSettings();
     }
 
-    private ActionsViewModel actionsViewModel;
+    private RingerModeSettingViewModel ringerModeSettingViewModel;
     private Menu optionsMenu;
 
     // --- Initialization ---
@@ -61,8 +61,8 @@ public class EditorFragment extends Fragment {
 
         // register updateActionRow to listen to the actions LiveData because updateActionRows needs to have view initialized first
         // registering updateActionRows seems to also call it, so this will also fill the view with the actions in the ViewModel
-        actionsViewModel = new ViewModelProvider(requireActivity()).get(ActionsViewModel.class);
-        actionsViewModel.getActionsLiveData().observe(requireActivity(), this::updateActionRows);
+        ringerModeSettingViewModel = new ViewModelProvider(requireActivity()).get(RingerModeSettingViewModel.class);
+        ringerModeSettingViewModel.getSettingsLiveData().observe(requireActivity(), this::updateActionRows);
     }
 
     @Override
@@ -89,7 +89,7 @@ public class EditorFragment extends Fragment {
         menuInflater.inflate(R.menu.editor_menu_select, optionsMenu);
 
         optionsMenu.findItem(R.id.deleteMenuItem).setOnMenuItemClickListener((menuItem) -> {
-            actionsViewModel.removeActions(getCheckedActionIndices());
+            ringerModeSettingViewModel.removeActions(getCheckedActionIndices());
             setUpOptionsMenuNormal();
             return false;
         });
@@ -97,14 +97,14 @@ public class EditorFragment extends Fragment {
 
     // --- Logic ---
 
-    private void updateActionRows(List<Action> actions) {
+    private void updateActionRows(List<RingerModeSetting> ringerModeSettings) {
         // clear the actions layout
         LinearLayout actionsLinearLayout = requireActivity().findViewById(R.id.actionsLinearLayout);
         actionsLinearLayout.removeAllViews();
         LayoutInflater layoutInflater = getLayoutInflater();
 
         // add new rows according to the actions list
-        for (Action action : actions) {
+        for (RingerModeSetting ringerModeSetting : ringerModeSettings) {
             // make a new row
             View actionRowLayout = layoutInflater.inflate(R.layout.action_row, actionsLinearLayout, false);
             actionsLinearLayout.addView(actionRowLayout);
@@ -119,8 +119,8 @@ public class EditorFragment extends Fragment {
             ringerModeButton.setOnClickListener(this::onRingerModeButtonClicked);
 
             // set data in row
-            timeLabel.setText(hourAndMinuteTo12HourStr(action.hour(), action.minute()));
-            ringerModeButton.setImageResource(getImageIdFromRingerMode(action.ringerMode()));
+            timeLabel.setText(hourAndMinuteTo12HourStr(ringerModeSetting.hour(), ringerModeSetting.minute()));
+            ringerModeButton.setImageResource(getImageIdFromRingerMode(ringerModeSetting.ringerMode()));
         }
     }
 
@@ -184,7 +184,7 @@ public class EditorFragment extends Fragment {
         TimePickerDialog timePickerDialog = new TimePickerDialog(
                 requireContext(),
                 (timePickerView, hour, minute) ->
-                        actionsViewModel.addAction(hour, minute, AudioManager.RINGER_MODE_SILENT),
+                        ringerModeSettingViewModel.addAction(hour, minute, AudioManager.RINGER_MODE_SILENT),
                 nowCalendar.get(Calendar.HOUR_OF_DAY), nowCalendar.get(Calendar.MINUTE), false
         );
         timePickerDialog.show();
@@ -194,13 +194,13 @@ public class EditorFragment extends Fragment {
         ViewParent actionRowLayout = timeLabel.getParent();
         LinearLayout actionsLinearLayout = requireActivity().findViewById(R.id.actionsLinearLayout);
         int actionIndex = actionsLinearLayout.indexOfChild((View)actionRowLayout);
-        Action action = actionsViewModel.getAction(actionIndex);
+        RingerModeSetting ringerModeSetting = ringerModeSettingViewModel.getAction(actionIndex);
 
         TimePickerDialog timePickerDialog = new TimePickerDialog(
                 requireContext(),
                 (timePickerView, hour, minute) ->
-                        actionsViewModel.setAction(actionIndex, hour, minute, action.ringerMode()),
-                action.hour(), action.minute(), false
+                        ringerModeSettingViewModel.setAction(actionIndex, hour, minute, ringerModeSetting.ringerMode()),
+                ringerModeSetting.hour(), ringerModeSetting.minute(), false
         );
         timePickerDialog.show();
     }
@@ -209,12 +209,12 @@ public class EditorFragment extends Fragment {
         ViewParent actionRowLayout = actionButton.getParent();
         LinearLayout actionsLinearLayout = requireActivity().findViewById(R.id.actionsLinearLayout);
         int actionIndex = actionsLinearLayout.indexOfChild((View)actionRowLayout);
-        Action action = actionsViewModel.getAction(actionIndex);
+        RingerModeSetting ringerModeSetting = ringerModeSettingViewModel.getAction(actionIndex);
 
         int newRingerMode = -1;
 
         // toggle ringer mode
-        switch (action.ringerMode()) {
+        switch (ringerModeSetting.ringerMode()) {
             case AudioManager.RINGER_MODE_SILENT:
                 newRingerMode = AudioManager.RINGER_MODE_VIBRATE;
                 break;
@@ -226,7 +226,7 @@ public class EditorFragment extends Fragment {
                 break;
         }
 
-        actionsViewModel.setAction(actionIndex, action.hour(), action.minute(), newRingerMode);
+        ringerModeSettingViewModel.setAction(actionIndex, ringerModeSetting.hour(), ringerModeSetting.minute(), newRingerMode);
     }
 
 }

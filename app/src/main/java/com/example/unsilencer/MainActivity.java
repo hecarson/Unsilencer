@@ -9,27 +9,32 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 
 public class MainActivity extends AppCompatActivity implements EditorFragment.SettingsNavigator {
 
-    private ActionsViewModel actionsViewModel;
-    private ActionScheduler actionScheduler;
+    private RingerModeSettingViewModel ringerModeSettingViewModel;
+    private RingerModeSettingScheduler actionScheduler;
     private NavController navController;
+
+    public static final String LOG_TAG = "Unsilencer";
 
     // --- Initialization ---
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        actionScheduler = new ActionScheduler(this);
+        Log.d(LOG_TAG, "activity started");
+
+        actionScheduler = new RingerModeSettingScheduler(this);
 
         // initialize the ActionsViewModel
         //
         // the ActionsViewModel needs to be initialized before inflating layouts, since inflating EditorFragment needs
         // the ActionsViewModel initialized beforehand
-        actionsViewModel = new ViewModelProvider(this, new ActionsViewModelFactory()).get(ActionsViewModel.class);
-        actionsViewModel.getRemovedActionRequestCodesLiveData().observe(this, actionScheduler::cancelRemovedActions);
-        actionsViewModel.getAddedActionsLiveData().observe(this, actionScheduler::addAlarmsForActions);
+        ringerModeSettingViewModel = new ViewModelProvider(this, new ActionsViewModelFactory()).get(RingerModeSettingViewModel.class);
+        ringerModeSettingViewModel.getRemovedActionRequestCodesLiveData().observe(this, actionScheduler::cancelRemovedRingerModeSettings);
+        ringerModeSettingViewModel.getAddedSettingsLiveData().observe(this, actionScheduler::addAlarmsForRingerModeSettings);
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -48,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements EditorFragment.Se
         @NonNull
         @Override
         public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
-            return (T) new ActionsViewModel(getFilesDir().getAbsolutePath());
+            return (T) new RingerModeSettingViewModel(getFilesDir().getAbsolutePath());
         }
     }
 

@@ -6,7 +6,9 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.provider.Settings;
+import android.util.Log;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultLauncher;
@@ -20,11 +22,14 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
     private NotificationManager notifManager;
     private AlarmManager alarmManager;
-    private ActionsViewModel actionsViewModel;
+    private PowerManager powerManager;
+    private RingerModeSettingViewModel ringerModeSettingViewModel;
     private SwitchPreference notifPolicyPref;
     private SwitchPreference exactAlarmPref;
+    private SwitchPreference ignoreOptimizationsPref;
     private ActivityResultLauncher<Intent> notifPolicySettingsLauncher;
     private ActivityResultLauncher<Intent> exactAlarmSettingsLauncher;
+    private ActivityResultLauncher<Intent> ignoreOptimizationsSettingsLauncher;
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
@@ -32,11 +37,13 @@ public class SettingsFragment extends PreferenceFragmentCompat {
 
         notifManager = requireContext().getSystemService(NotificationManager.class);
         alarmManager = requireContext().getSystemService(AlarmManager.class);
-        actionsViewModel = new ViewModelProvider(requireActivity()).get(ActionsViewModel.class);
+        powerManager = requireContext().getSystemService(PowerManager.class);
+        ringerModeSettingViewModel = new ViewModelProvider(requireActivity()).get(RingerModeSettingViewModel.class);
 
         notifPolicyPref = findPreference("notifPolicyPerm");
         exactAlarmPref = findPreference("exactAlarmPerm");
-        assert notifPolicyPref != null && exactAlarmPref != null;
+        ignoreOptimizationsPref = findPreference("ignoreOptimizationsPerm");
+        assert notifPolicyPref != null && exactAlarmPref != null && ignoreOptimizationsPref != null;
 
         // set checked states according to permissions
         notifPolicyPref.setChecked(notifManager.isNotificationPolicyAccessGranted());
@@ -44,10 +51,12 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             exactAlarmPref.setChecked(true);
         else
             exactAlarmPref.setChecked(alarmManager.canScheduleExactAlarms());
+        ignoreOptimizationsPref.setChecked(powerManager.isIgnoringBatteryOptimizations(requireContext().getPackageName()));
 
         // register click and change listeners
         notifPolicyPref.setOnPreferenceClickListener(this::onNotifPolicyPrefClicked);
         exactAlarmPref.setOnPreferenceClickListener(this::onExactAlarmPrefClicked);
+        ignoreOptimizationsPref.setOnPreferenceClickListener(this::onIgnoreOptimizationsPrefClicked);
 
         // make settings launchers here since registerForActivityResult can only be called during initialization
         notifPolicySettingsLauncher = registerForActivityResult(
@@ -58,14 +67,14 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                 new ActivityResultContracts.StartActivityForResult(),
                 this::onExactAlarmSettingActivityResult
         );
+        ignoreOptimizationsSettingsLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                this::onIgnoreOptimizationsSettingActivityResult
+        );
 
-        // TODO: temporary debug button
         Preference debugPref = findPreference("debugPref");
         assert debugPref != null;
-        debugPref.setOnPreferenceClickListener((preference) -> {
-
-            return true;
-        });
+        debugPref.setOnPreferenceClickListener(this::onDebugPrefClicked);
     }
 
     private boolean onNotifPolicyPrefClicked(Preference preference) {
@@ -87,6 +96,16 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         return true;
     }
 
+    private boolean onIgnoreOptimizationsPrefClicked(Preference preference) {
+        Intent ignoreOptimizationsIntent = new Intent(
+                Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                Uri.parse("package:" + requireContext().getPackageName())
+        );
+        ignoreOptimizationsSettingsLauncher.launch(ignoreOptimizationsIntent);
+
+        return true;
+    }
+
     private void onNotifPolicySettingActivityResult(ActivityResult activityResult) {
         notifPolicyPref.setChecked(notifManager.isNotificationPolicyAccessGranted());
     }
@@ -99,8 +118,25 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         if (alarmManager.canScheduleExactAlarms()) {
             exactAlarmPref.setChecked(true);
             // ensure all actions are scheduled
-            actionsViewModel.removeAndReaddAllActions();
+            ringerModeSettingViewModel.removeAndReaddAllActions();
         }
+        else
+            exactAlarmPref.setChecked(false);
+    }
+
+    private void onIgnoreOptimizationsSettingActivityResult(ActivityResult activityResult) {
+        ignoreOptimizationsPref.setChecked(
+                powerManager.isIgnoringBatteryOptimizations(requireContext().getPackageName())
+        );
+    }
+
+    private boolean onDebugPrefClicked(Preference preference) {
+        PowerManager powerManager = requireContext().getSystemService(PowerManager.class);
+        Log.d(MainActivity.LOG_TAG, "power manager ignoring optimizations: " +
+                powerManager.isIgnoringBatteryOptimizations(requireContext().getPackageName())
+        );
+
+        return true;
     }
 
 }

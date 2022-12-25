@@ -11,9 +11,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-
 public class RingerModeSettingReceiver extends BroadcastReceiver {
 
     @Override
@@ -24,19 +21,26 @@ public class RingerModeSettingReceiver extends BroadcastReceiver {
         int ringerMode = extras.getInt("ringerMode");
         int requestCode = extras.getInt("requestCode");
 
+        Log.d(MainActivity.LOG_TAG, "setting broadcast received, hour " + hour + " minute " + minute + " ringerMode " + ringerMode);
+
         NotificationManager notifManager = context.getSystemService(NotificationManager.class);
         AudioManager audioManager = context.getSystemService(AudioManager.class);
 
-        if (!notifManager.isNotificationPolicyAccessGranted())
+        if (!notifManager.isNotificationPolicyAccessGranted()) {
+            Log.d(MainActivity.LOG_TAG, "no notif policy perm");
             return;
+        }
 
         // this entire project... just for this one line
         audioManager.setRingerMode(ringerMode);
+        Log.d(MainActivity.LOG_TAG, "set ringer mode");
 
         AlarmManager alarmManager = context.getSystemService(AlarmManager.class);
 
-        if (Build.VERSION.SDK_INT >= 31 && !alarmManager.canScheduleExactAlarms())
+        if (Build.VERSION.SDK_INT >= 31 && !alarmManager.canScheduleExactAlarms()) {
+            Log.d(MainActivity.LOG_TAG, "no exact alarm perm");
             return;
+        }
 
         Intent ringerModeSettingIntent = new Intent(context, RingerModeSettingReceiver.class);
         ringerModeSettingIntent.putExtra("hour", hour);
@@ -46,10 +50,12 @@ public class RingerModeSettingReceiver extends BroadcastReceiver {
 
         alarmManager.setExactAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
-                ActionScheduler.findNextEpochTimeForAction(hour, minute),
+                RingerModeSettingScheduler.findNextEpochTimeForRingerModeSetting(hour, minute),
                 PendingIntent.getBroadcast(context, requestCode, ringerModeSettingIntent,
                         PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT)
         );
+
+        Log.d(MainActivity.LOG_TAG, "scheduled next setting");
     }
 
 }

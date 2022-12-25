@@ -4,16 +4,19 @@
         android:clickable="false"
         android:defaultValue="false"
         android:key="notifPolicyPerm"
-        android:summaryOff="This permission is needed to change your ringer mode setting."
-        android:summaryOn="Permission granted!"
+        android:summary="This permission is needed to change your ringer mode setting."
         android:title="Do Not Disturb policy permission" />
     <SwitchPreference
         android:clickable="false"
         android:defaultValue="false"
         android:key="exactAlarmPerm"
-        android:summaryOff="This permission is needed to make sure that your ringer mode setting is set on time when your device is idle."
-        android:summaryOn="Permission granted!"
+        android:summary="This permission is needed to make sure that your ringer mode settings are set on time."
         android:title="Exact alarm permission" />
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="ignoreOptimizationsPerm"
+        android:summary="This app needs to ignore power optimizations to make sure that your ringer mode settings are set even when your device is idle. This permission can be revoked from the battery settings of this app."
+        android:title="Ignore power optimizations" />
     <Preference
         app:key="debugPref"
         app:title="Debug" />
